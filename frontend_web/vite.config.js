@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    open: true // Abre automáticamente el navegador
+    open: true // Abre automáticamente el navegador index.html
   },
   define: {
     'process.env': {}
