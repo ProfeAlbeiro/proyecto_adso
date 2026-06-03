@@ -1,7 +1,7 @@
 // src/models/AuthModel.js
 import httpService from '../services/httpService'
 import storageService from '../services/storageService'
-import jwtService from '../services/jwtService'  // Lo usaremos para decodificar, no para generar
+import jwtService from '../services/jwtService'
 import API_CONFIG from '../config/api'
 
 class AuthModel {
@@ -11,7 +11,6 @@ class AuthModel {
       console.log('🔐 Enviando login a API real:', credentials.email)
       
       // 1. Llamar al endpoint real de login
-      // POST a http://localhost:3000/api/users/login
       const response = await httpService.post(
         API_CONFIG.ENDPOINTS.LOGIN,  // '/users/login'
         {
@@ -21,26 +20,41 @@ class AuthModel {
         false  // No necesita token porque es login
       )
       
-      console.log('📦 Respuesta del login:', response)
+      console.log('📦 Respuesta completa del login:', response)
       
-      // 2. La API real devuelve:
-      // {
-      //   success: true,
-      //   message: "Usuario autenticado",
-      //   data: {
-      //     id: 1,
-      //     email: "admin@test.com",
-      //     name: "Admin",
-      //     lastname: "Sistema",
-      //     role: "admin",
-      //     session_token: "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-      //   }
-      // }
+      // 2. Verificar si la respuesta es exitosa
+      if (!response.success) {
+        return {
+          success: false,
+          error: response.message || 'Error en el servidor'
+        }
+      }
       
-      // 3. Extraer el token de la respuesta (viene como "JWT {token}")
-      const sessionToken = response.session_token  // "JWT eyJhbGc..."
+      // 3. Los datos del usuario están en response.data
+      const userDataFromApi = response.data
       
-      // 4. Limpiar el token (quitar "JWT " del inicio)
+      if (!userDataFromApi) {
+        console.error('❌ No se encontraron datos de usuario en la respuesta')
+        return {
+          success: false,
+          error: 'Error en la respuesta del servidor'
+        }
+      }
+      
+      console.log('👤 Datos del usuario:', userDataFromApi)
+      
+      // 4. Extraer el token de session_token (viene como "JWT {token}")
+      const sessionToken = userDataFromApi.session_token
+      
+      if (!sessionToken) {
+        console.error('❌ No se encontró session_token en la respuesta')
+        return {
+          success: false,
+          error: 'Error al obtener token de autenticación'
+        }
+      }
+      
+      // 5. Limpiar el token (quitar "JWT " del inicio)
       let token = sessionToken
       if (sessionToken && sessionToken.startsWith('JWT ')) {
         token = sessionToken.substring(4)  // Quita "JWT "
@@ -48,20 +62,28 @@ class AuthModel {
       
       console.log('✅ Token extraído:', token ? 'Token recibido' : 'No hay token')
       
-      // 5. Guardar token en localStorage
+      // 6. Guardar token en localStorage
       storageService.setToken(token)
       
-      // 6. Guardar datos del usuario (sin el token)
+      // 7. Guardar datos del usuario
       const userData = {
-        id: response.id,
-        email: response.email,
-        name: response.name,
-        lastname: response.lastname,
-        role: response.role,
-        phone: response.phone,
-        image: response.image
+        id: userDataFromApi.id,
+        email: userDataFromApi.email,
+        name: userDataFromApi.name || userDataFromApi.email.split('@')[0],
+        lastname: userDataFromApi.lastname || '',
+        role: userDataFromApi.role || 'user',
+        phone: userDataFromApi.phone || '',
+        image: userDataFromApi.image || ''
       }
+      
       storageService.setUser(userData)
+      
+      // 8. Guardar el rol por separado para acceso rápido
+      if (userData.role) {
+        storageService.setUserRole(userData.role)
+      }
+      
+      console.log('✅ Usuario guardado en storage:', userData)
       
       return {
         success: true,
@@ -91,21 +113,33 @@ class AuthModel {
         password: userData.password,
         phone: userData.phone || '',
         image: userData.image || '',
-        role: userData.role || 'user'  // Por defecto 'user'
+        role: userData.role || 'user'
       }
       
-      // POST a http://localhost:3000/api/users/create
+      console.log('📤 Enviando datos de registro:', userToCreate)
+      
       const response = await httpService.post(
         API_CONFIG.ENDPOINTS.REGISTER,  // '/users/create'
         userToCreate,
         false  // No necesita token
       )
       
-      console.log('✅ Usuario creado:', response)
+      console.log('✅ Respuesta del registro:', response)
+      
+      // Verificar si la respuesta es exitosa
+      if (!response.success) {
+        return {
+          success: false,
+          error: response.message || 'Error al registrar usuario'
+        }
+      }
+      
+      // La respuesta puede ser directa o estar en response.data
+      const createdUser = response.data || response
       
       return {
         success: true,
-        user: response,
+        user: createdUser,
         message: 'Usuario registrado exitosamente'
       }
       
@@ -129,12 +163,11 @@ class AuthModel {
     }
   }
 
-  // Verificar si está autenticado (usando jwtService real)
+  // Verificar si está autenticado
   static isAuthenticated() {
     const token = storageService.getToken()
     if (!token) return false
     
-    // Usamos jwtService para verificar expiración
     const isValid = jwtService.verifyToken(token)
     
     if (!isValid) {

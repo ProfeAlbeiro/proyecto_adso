@@ -4,6 +4,7 @@ class StorageService {
     this.storage = storageType === 'localStorage' ? localStorage : sessionStorage
     this.tokenKey = 'auth_token'
     this.userKey = 'user_data'
+    this.roleKey = 'user_role'
   }
 
   // Guardar token
@@ -42,11 +43,27 @@ class StorageService {
     return this.removeItem(this.userKey)
   }
 
+  // Guardar rol del usuario
+  setUserRole(role) {
+    console.log('💾 Guardando rol en storage:', role)
+    return this.setItem(this.roleKey, role)
+  }
+
+  // Obtener rol del usuario
+  getUserRole() {
+    return this.getItem(this.roleKey)
+  }
+
+  // Eliminar rol
+  removeUserRole() {
+    return this.removeItem(this.roleKey)
+  }
+
   // Limpiar toda la sesión
   clearSession() {
     this.removeToken()
     this.removeUser()
-    this.removeUserRole()  // ← NUEVO
+    this.removeUserRole()
   }
 
   // Guardar item
@@ -96,23 +113,6 @@ class StorageService {
   hasItem(key) {
     return this.getItem(key) !== null
   }
-
-  // Guardar rol del usuario (útil para acceso rápido)
-  setUserRole(role) {
-    console.log('💾 Guardando rol en storage:', role)
-    return this.setItem('user_role', role)
-  }
-
-  // Obtener rol del usuario
-  getUserRole() {
-    return this.getItem('user_role')
-  }
-
-  // Eliminar rol
-  removeUserRole() {
-    return this.removeItem('user_role')
-  }
-
 }
 
 export default new StorageService('localStorage')

@@ -18,9 +18,6 @@ class HttpService {
     if (includeAuth) {
       const token = this.getToken()
       if (token) {
-        // IMPORTANTE: La API espera "Bearer {token}" sin JWT adelante?
-        // Según tu userController.js, session_token: `JWT ${token}`
-        // Pero el middleware espera "Bearer {token}"
         headers['Authorization'] = `Bearer ${token}`
       }
     }
@@ -32,23 +29,21 @@ class HttpService {
     console.log('📡 Response status:', response.status)
     
     // Obtener el cuerpo de la respuesta
-    const data = await response.json().catch(() => ({}))
+    let data = {}
+    try {
+      data = await response.json()
+    } catch (e) {
+      console.error('Error al parsear JSON:', e)
+    }
+    
+    console.log('📡 Response data completa:', data)
     
     if (!response.ok) {
-      // La API real devuelve { success: false, message: "error" }
       const errorMessage = data.message || data.error || `Error HTTP: ${response.status}`
       throw new Error(errorMessage)
     }
     
-    // La API real devuelve { success: true, message: "...", data: {...} }
-    console.log('📡 Response data:', data)
-    
-    // Si la respuesta tiene la estructura { success, data }, extraemos data
-    if (data.success === true && data.data !== undefined) {
-      return data.data  // ← Retornamos solo los datos útiles
-    }
-    
-    // Si no tiene esa estructura, retornamos todo
+    // Retornamos toda la respuesta para que el Modelo pueda acceder a data.session_token
     return data
   }
 
