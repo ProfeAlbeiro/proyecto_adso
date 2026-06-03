@@ -1,74 +1,76 @@
 // src/models/AuthModel.js
 import httpService from '../services/httpService'
 import storageService from '../services/storageService'
-import jwtService from '../services/jwtService'
+import jwtService from '../services/jwtService'  // Lo usaremos para decodificar, no para generar
 import API_CONFIG from '../config/api'
 
 class AuthModel {
-  // Iniciar sesión con tu JSON Server
+  // Iniciar sesión con API real
   static async login(credentials) {
     try {
-      console.log('🔐 Intentando login con:', credentials.email)
+      console.log('🔐 Enviando login a API real:', credentials.email)
       
-      // Obtener todos los usuarios y buscar por email
-      const users = await httpService.get(API_CONFIG.ENDPOINTS.USERS, false)
-      console.log('📋 Usuarios disponibles:', users)
+      // 1. Llamar al endpoint real de login
+      // POST a http://localhost:3000/api/users/login
+      const response = await httpService.post(
+        API_CONFIG.ENDPOINTS.LOGIN,  // '/users/login'
+        {
+          email: credentials.email,
+          password: credentials.password
+        },
+        false  // No necesita token porque es login
+      )
       
-      // Buscar usuario por email
-      const user = users.find(u => u.email === credentials.email)
+      console.log('📦 Respuesta del login:', response)
       
-      if (!user) {
-        return {
-          success: false,
-          error: 'Usuario no encontrado'
-        }
+      // 2. La API real devuelve:
+      // {
+      //   success: true,
+      //   message: "Usuario autenticado",
+      //   data: {
+      //     id: 1,
+      //     email: "admin@test.com",
+      //     name: "Admin",
+      //     lastname: "Sistema",
+      //     role: "admin",
+      //     session_token: "JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      //   }
+      // }
+      
+      // 3. Extraer el token de la respuesta (viene como "JWT {token}")
+      const sessionToken = response.session_token  // "JWT eyJhbGc..."
+      
+      // 4. Limpiar el token (quitar "JWT " del inicio)
+      let token = sessionToken
+      if (sessionToken && sessionToken.startsWith('JWT ')) {
+        token = sessionToken.substring(4)  // Quita "JWT "
       }
       
-      console.log('✅ Usuario encontrado:', user)
+      console.log('✅ Token extraído:', token ? 'Token recibido' : 'No hay token')
       
-      // Para pruebas, aceptamos cualquier contraseña no vacía
-      // NOTA: En producción, debes verificar con bcrypt
-      if (!credentials.password || credentials.password.length < 1) {
-        return {
-          success: false,
-          error: 'Contraseña incorrecta'
-        }
-      }
-      
-      // Generar token JWT usando el método correcto
-      const token = jwtService.generateToken({
-        id: user.id,
-        email: user.email,
-        name: user.email.split('@')[0],
-        exp: Date.now() + 3600000 // 1 hora
-      })
-      
-      if (!token) {
-        return {
-          success: false,
-          error: 'Error al generar token de autenticación'
-        }
-      }
-      
-      // Guardar token y usuario
+      // 5. Guardar token en localStorage
       storageService.setToken(token)
-      storageService.setUser({
-        id: user.id,
-        email: user.email,
-        name: user.email.split('@')[0]
-      })
+      
+      // 6. Guardar datos del usuario (sin el token)
+      const userData = {
+        id: response.id,
+        email: response.email,
+        name: response.name,
+        lastname: response.lastname,
+        role: response.role,
+        phone: response.phone,
+        image: response.image
+      }
+      storageService.setUser(userData)
       
       return {
         success: true,
         token: token,
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.email.split('@')[0]
-        }
+        user: userData
       }
+      
     } catch (error) {
-      console.error('❌ Error en login:', error)
+      console.error('❌ Error en login API real:', error)
       return {
         success: false,
         error: error.message || 'Error de conexión con el servidor'
@@ -79,35 +81,25 @@ class AuthModel {
   // Registrar nuevo usuario
   static async register(userData) {
     try {
-      console.log('📝 Intentando registrar usuario:', userData.email)
+      console.log('📝 Registrando usuario en API real:', userData.email)
       
-      // Verificar si el usuario ya existe
-      const users = await httpService.get(API_CONFIG.ENDPOINTS.USERS, false)
-      
-      const existingUser = users.find(u => u.email === userData.email)
-      
-      if (existingUser) {
-        return {
-          success: false,
-          error: 'El correo electrónico ya está registrado'
-        }
-      }
-      
-      // Obtener el último ID para generar el siguiente
-      const lastId = users.length > 0 ? Math.max(...users.map(u => u.id)) : 0
-      const newId = lastId + 1
-      
-      // Crear nuevo usuario
-      const newUser = {
-        id: newId,
+      // La API espera: name, lastname, email, password, phone?, image?
+      const userToCreate = {
+        name: userData.name,
+        lastname: userData.lastname || '',
         email: userData.email,
-        password: userData.password // En producción, deberías hashear
+        password: userData.password,
+        phone: userData.phone || '',
+        image: userData.image || '',
+        role: userData.role || 'user'  // Por defecto 'user'
       }
       
-      console.log('➕ Creando usuario:', newUser)
-      
-      // Enviar POST a JSON Server
-      const response = await httpService.post(API_CONFIG.ENDPOINTS.USERS, newUser, false)
+      // POST a http://localhost:3000/api/users/create
+      const response = await httpService.post(
+        API_CONFIG.ENDPOINTS.REGISTER,  // '/users/create'
+        userToCreate,
+        false  // No necesita token
+      )
       
       console.log('✅ Usuario creado:', response)
       
@@ -116,8 +108,9 @@ class AuthModel {
         user: response,
         message: 'Usuario registrado exitosamente'
       }
+      
     } catch (error) {
-      console.error('❌ Error en registro:', error)
+      console.error('❌ Error en registro API real:', error)
       return {
         success: false,
         error: error.message || 'Error al registrar usuario'
@@ -136,11 +129,12 @@ class AuthModel {
     }
   }
 
-  // Verificar si está autenticado
+  // Verificar si está autenticado (usando jwtService real)
   static isAuthenticated() {
     const token = storageService.getToken()
     if (!token) return false
     
+    // Usamos jwtService para verificar expiración
     const isValid = jwtService.verifyToken(token)
     
     if (!isValid) {

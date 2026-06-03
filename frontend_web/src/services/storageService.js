@@ -46,6 +46,7 @@ class StorageService {
   clearSession() {
     this.removeToken()
     this.removeUser()
+    this.removeUserRole()  // ← NUEVO
   }
 
   // Guardar item
@@ -95,6 +96,23 @@ class StorageService {
   hasItem(key) {
     return this.getItem(key) !== null
   }
+
+  // Guardar rol del usuario (útil para acceso rápido)
+  setUserRole(role) {
+    console.log('💾 Guardando rol en storage:', role)
+    return this.setItem('user_role', role)
+  }
+
+  // Obtener rol del usuario
+  getUserRole() {
+    return this.getItem('user_role')
+  }
+
+  // Eliminar rol
+  removeUserRole() {
+    return this.removeItem('user_role')
+  }
+
 }
 
 export default new StorageService('localStorage')

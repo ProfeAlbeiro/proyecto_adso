@@ -6,12 +6,10 @@ class HttpService {
     this.baseURL = API_CONFIG.BASE_URL
   }
 
-  // Obtener token del localStorage
   getToken() {
     return localStorage.getItem('auth_token')
   }
 
-  // Configurar headers
   getHeaders(includeAuth = true) {
     const headers = {
       'Content-Type': 'application/json'
@@ -20,6 +18,9 @@ class HttpService {
     if (includeAuth) {
       const token = this.getToken()
       if (token) {
+        // IMPORTANTE: La API espera "Bearer {token}" sin JWT adelante?
+        // Según tu userController.js, session_token: `JWT ${token}`
+        // Pero el middleware espera "Bearer {token}"
         headers['Authorization'] = `Bearer ${token}`
       }
     }
@@ -27,31 +28,30 @@ class HttpService {
     return headers
   }
 
-  // Manejar errores de respuesta
   async handleResponse(response) {
     console.log('📡 Response status:', response.status)
     
+    // Obtener el cuerpo de la respuesta
+    const data = await response.json().catch(() => ({}))
+    
     if (!response.ok) {
-      let errorMessage = `Error HTTP: ${response.status}`
-      try {
-        const error = await response.json()
-        errorMessage = error.message || error.error || errorMessage
-      } catch (e) {
-        errorMessage = await response.text() || errorMessage
-      }
+      // La API real devuelve { success: false, message: "error" }
+      const errorMessage = data.message || data.error || `Error HTTP: ${response.status}`
       throw new Error(errorMessage)
     }
     
-    if (response.status === 204) {
-      return null
+    // La API real devuelve { success: true, message: "...", data: {...} }
+    console.log('📡 Response data:', data)
+    
+    // Si la respuesta tiene la estructura { success, data }, extraemos data
+    if (data.success === true && data.data !== undefined) {
+      return data.data  // ← Retornamos solo los datos útiles
     }
     
-    const data = await response.json()
-    console.log('📡 Response data:', data)
+    // Si no tiene esa estructura, retornamos todo
     return data
   }
 
-  // POST request (más importante para login)
   async post(endpoint, data, includeAuth = true) {
     try {
       const url = `${this.baseURL}${endpoint}`
@@ -72,7 +72,6 @@ class HttpService {
     }
   }
 
-  // GET request
   async get(endpoint, includeAuth = true) {
     try {
       const url = `${this.baseURL}${endpoint}`
@@ -88,10 +87,10 @@ class HttpService {
     }
   }
 
-  // PUT request
   async put(endpoint, data, includeAuth = true) {
     try {
       const url = `${this.baseURL}${endpoint}`
+      console.log(`📡 PUT a: ${url}`)
       const response = await fetch(url, {
         method: 'PUT',
         headers: this.getHeaders(includeAuth),
@@ -104,10 +103,10 @@ class HttpService {
     }
   }
 
-  // DELETE request
   async delete(endpoint, includeAuth = true) {
     try {
       const url = `${this.baseURL}${endpoint}`
+      console.log(`📡 DELETE a: ${url}`)
       const response = await fetch(url, {
         method: 'DELETE',
         headers: this.getHeaders(includeAuth)

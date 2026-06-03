@@ -8,9 +8,12 @@ import '../../styles/Register.css'
 const RegisterView = () => {
   const [formData, setFormData] = useState({
     name: '',
+    lastname: '',        // ← NUEVO: Apellido
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    phone: '',           // ← NUEVO: Teléfono
+    role: 'user'         // ← NUEVO: Rol (por defecto 'user')
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -34,8 +37,8 @@ const RegisterView = () => {
     console.log('📝 Intentando registrar:', formData.email)
     
     // Validaciones
-    if (!formData.name || !formData.email || !formData.password) {
-      setError('Por favor complete todos los campos')
+    if (!formData.name || !formData.lastname || !formData.email || !formData.password) {
+      setError('Por favor complete todos los campos obligatorios')
       return
     }
     
@@ -49,19 +52,34 @@ const RegisterView = () => {
       return
     }
     
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      setError('Por favor ingrese un email válido')
+      return
+    }
+    
     setLoading(true)
     
     try {
+      // Enviar todos los campos que la API espera
       const result = await register({
         name: formData.name,
+        lastname: formData.lastname,
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        phone: formData.phone,
+        role: formData.role
+        // image se puede agregar después
       })
+      
       console.log('✅ Registro exitoso:', result)
       setSuccess('Usuario registrado exitosamente. Redirigiendo al login...')
+      
       setTimeout(() => {
         navigate('/login')
       }, 2000)
+      
     } catch (err) {
       console.error('❌ Error en registro:', err)
       setError(err.error || 'Error al registrar usuario. Intente nuevamente.')
@@ -95,22 +113,38 @@ const RegisterView = () => {
         )}
         
         <form onSubmit={handleSubmit} className="register-form">
-          <div className="form-group">
-            <label htmlFor="name">Nombre Completo</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Ingrese su nombre"
-              disabled={loading}
-              required
-            />
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="name">Nombre *</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Ingrese su nombre"
+                disabled={loading}
+                required
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="lastname">Apellido *</label>
+              <input
+                type="text"
+                id="lastname"
+                name="lastname"
+                value={formData.lastname}
+                onChange={handleChange}
+                placeholder="Ingrese su apellido"
+                disabled={loading}
+                required
+              />
+            </div>
           </div>
           
           <div className="form-group">
-            <label htmlFor="email">Correo Electrónico</label>
+            <label htmlFor="email">Correo Electrónico *</label>
             <input
               type="email"
               id="email"
@@ -124,31 +158,64 @@ const RegisterView = () => {
           </div>
           
           <div className="form-group">
-            <label htmlFor="password">Contraseña</label>
+            <label htmlFor="phone">Teléfono</label>
             <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
+              type="tel"
+              id="phone"
+              name="phone"
+              value={formData.phone}
               onChange={handleChange}
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Opcional"
               disabled={loading}
-              required
             />
           </div>
           
+          <div className="form-row">
+            <div className="form-group">
+              <label htmlFor="password">Contraseña *</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Mínimo 6 caracteres"
+                disabled={loading}
+                required
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="confirmPassword">Confirmar Contraseña *</label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                placeholder="Repita su contraseña"
+                disabled={loading}
+                required
+              />
+            </div>
+          </div>
+          
           <div className="form-group">
-            <label htmlFor="confirmPassword">Confirmar Contraseña</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
+            <label htmlFor="role">Rol</label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
               onChange={handleChange}
-              placeholder="Repita su contraseña"
               disabled={loading}
-              required
-            />
+              className="form-control"
+            >
+              <option value="user">Usuario</option>
+              <option value="customer">Cliente</option>
+              <option value="seller">Vendedor</option>
+              <option value="admin">Administrador</option>
+            </select>
+            <small className="form-hint">El rol por defecto es "usuario"</small>
           </div>
           
           <button 

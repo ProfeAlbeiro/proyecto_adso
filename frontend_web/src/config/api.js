@@ -1,16 +1,17 @@
 // src/config/api.js
 const API_CONFIG = {
-  BASE_URL: 'http://localhost:3000', // Tu JSON Server en puerto 3000
+  // Cambiar a la URL de tu API Node.js
+  BASE_URL: 'http://10.1.196.109:3000/api',  // ← O usa 'http://localhost:3000/api'
   TIMEOUT: 10000,
   ENDPOINTS: {
-    LOGIN: '/login',     // Este endpoint puede no existir en JSON Server
-    REGISTER: '/users',  // JSON Server usa /users para CRUD
-    POSTS: '/posts',
-    COMMENTS: '/comments',
-    PRODUCTS: '/products',
-    CATEGORIES: '/categories',
-    ORDERS: '/orders',
-    USERS: '/users'      // Este es el endpoint correcto para usuarios
+    // Endpoints de autenticación
+    LOGIN: '/users/login',      // POST
+    REGISTER: '/users/create',   // POST
+    
+    // Endpoints de usuarios (requieren token)
+    USERS: '/users',             // GET (todos) y POST (crear)
+    USER_BY_ID: '/users/:id',    // GET, PUT
+    USER_DELETE: '/users/delete/:id'  // DELETE
   }
 }
 

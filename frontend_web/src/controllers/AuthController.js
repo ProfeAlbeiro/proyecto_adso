@@ -20,12 +20,14 @@ class AuthController {
         return
       }
       
-      // Intentar login con el backend
+      // Intentar login con la API real
       const result = await AuthModel.login(credentials)
       
       console.log('📊 Resultado del login:', result)
       
       if (result.success) {
+        // result.user ahora incluye: id, email, name, lastname, role, phone, image
+        // result.token es el JWT real firmado por el backend
         onSuccess(result.user, result.token)
       } else {
         onError(result.error || 'Credenciales incorrectas')
@@ -42,8 +44,8 @@ class AuthController {
       console.log('🔧 AuthController: Procesando registro para:', userData.email)
       
       // Validaciones
-      if (!userData.email || !userData.password || !userData.name) {
-        onError('Por favor complete todos los campos')
+      if (!userData.email || !userData.password || !userData.name || !userData.lastname) {
+        onError('Por favor complete todos los campos obligatorios (nombre, apellido, email, contraseña)')
         return
       }
       
@@ -96,13 +98,31 @@ class AuthController {
     }
   }
   
-  // Verificar autenticación
+  // Verificar autenticación (útil para rutas protegidas)
   static async checkAuth() {
     const isValid = AuthModel.isAuthenticated()
     if (!isValid) {
       await AuthModel.logout()
     }
     return isValid
+  }
+  
+  // NUEVO: Obtener el rol del usuario actual
+  static getUserRole() {
+    const user = AuthModel.getCurrentUser()
+    return user?.role || null
+  }
+  
+  // NUEVO: Verificar si el usuario tiene un rol específico
+  static hasRole(requiredRole) {
+    const userRole = this.getUserRole()
+    return userRole === requiredRole
+  }
+  
+  // NUEVO: Verificar si el usuario tiene alguno de los roles permitidos
+  static hasAnyRole(allowedRoles) {
+    const userRole = this.getUserRole()
+    return allowedRoles.includes(userRole)
   }
 }
 
