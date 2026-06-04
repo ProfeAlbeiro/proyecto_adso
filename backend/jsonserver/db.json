@@ -98,6 +98,11 @@
       "email": "pepito@perez.com",
       "password": "$2a$10$fUZ9oh/.Dc.oSoiNpJuMpuUmMS3CTNhBK8UwQbDTBpuThx8KVv/VO",
       "id": 5
+    },
+    {
+      "email": "rosita@rosano.com",
+      "password": "$2a$10$EYMJmJ1cXB/B.T.CeYwclO.wcYQ1ypmAZ5g9r3rSatGlSCfYNcrai",
+      "id": 6
     }
   ]
 }

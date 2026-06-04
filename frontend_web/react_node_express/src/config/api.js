@@ -2,7 +2,7 @@
 const API_CONFIG = {
   // Usa la IP real de tu máquina (la que muestra ipconfig/ifconfig)
   // Si es la misma máquina, usa 'http://localhost:3000/api'
-  BASE_URL: 'http://192.168.78.145:3000/api',  // ← Verifica que esta IP sea correcta
+  BASE_URL: 'http://localhost:3000/api',  // ← Verifica que esta IP sea correcta
   TIMEOUT: 10000,
   ENDPOINTS: {
     LOGIN: '/users/login',
