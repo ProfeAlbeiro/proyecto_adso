@@ -5,8 +5,8 @@ import LoginView from './views/auth/LoginView'
 import RegisterView from './views/auth/RegisterView'
 import DashboardView from './views/dashboard/DashboardView'
 import Navbar from './views/common/Navbar'
-import useAuth from './hooks/useAuth'
 import LoadingSpinner from './views/common/LoadingSpinner'
+import useAuth from './hooks/useAuth'
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth()
