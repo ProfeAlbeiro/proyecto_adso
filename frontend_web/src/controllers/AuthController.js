@@ -55,7 +55,7 @@ class AuthController {
         return
       }
       
-      if (userData.password.length < 6) {
+      if (userData.password.length < 5) {
         onError('La contraseña debe tener al menos 6 caracteres')
         return
       }

@@ -61,7 +61,7 @@ const UserForm = ({ user, isEdit, onSuccess, onClose }) => {
       return
     }
 
-    if (!isEdit && formData.password.length < 6) {
+    if (!isEdit && formData.password.length < 5) {
       setError('La contraseña debe tener al menos 6 caracteres')
       return
     }

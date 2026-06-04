@@ -47,7 +47,7 @@ const RegisterView = () => {
       return
     }
     
-    if (formData.password.length < 6) {
+    if (formData.password.length < 5) {
       setError('La contraseña debe tener al menos 6 caracteres')
       return
     }

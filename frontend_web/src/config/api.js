@@ -1,7 +1,7 @@
 // src/config/api.js
 const API_CONFIG = {
   // Cambiar a la URL de tu API Node.js
-  BASE_URL: 'http://10.1.196.109:3000/api',  // ← O usa 'http://localhost:3000/api'
+  BASE_URL: 'http://192.168.230.1:3000/api',  // ← O usa 'http://localhost:3000/api'
   TIMEOUT: 10000,
   ENDPOINTS: {
     // Endpoints de autenticación
