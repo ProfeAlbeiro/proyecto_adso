@@ -28,9 +28,13 @@ module.exports = {
 
       if (isPasswordValid) {
         const token = jwt.sign(
-          { id: myUser.id, email: myUser.email, role: myUser.role },
-          keys.secretOrKey,
-          { expiresIn: "1h" }
+          { 
+            id: myUser.id, 
+            email: myUser.email, 
+            role: myUser.role,
+            exp: Math.floor(Date.now() / 1000) + (60 * 60)  // 1 hora en segundos
+          },
+          keys.secretOrKey
         );
 
         const data = {

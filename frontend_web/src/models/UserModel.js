@@ -3,22 +3,35 @@ import httpService from '../services/httpService'
 import API_CONFIG from '../config/api'
 
 class UserModel {
-  // GET - Obtener todos los usuarios (requiere token + rol admin/seller)
+  // GET - Obtener todos los usuarios
   static async getAllUsers() {
     try {
       console.log('📋 Obteniendo todos los usuarios desde API real')
       
-      // GET a http://localhost:3000/api/users
-      // Requiere token en header (Authorization: Bearer {token})
-      const users = await httpService.get(API_CONFIG.ENDPOINTS.USERS, true)
+      // GET a http://192.168.230.1:3000/api/users
+      const response = await httpService.get(API_CONFIG.ENDPOINTS.USERS, true)
       
-      // La API devuelve: { success: true, message: "...", data: [...] }
-      // httpService.handleResponse ya extrajo data, entonces users es el array
-      console.log('✅ Usuarios obtenidos:', users?.length || 0)
+      console.log('📦 Respuesta completa de getAllUsers:', response)
+      
+      // IMPORTANTE: La API devuelve { success: true, data: [...] }
+      // httpService.handleResponse ya extrajo la respuesta completa
+      // Ahora necesitamos extraer el array de data
+      let usersArray = []
+      
+      if (response && response.data && Array.isArray(response.data)) {
+        usersArray = response.data
+      } else if (Array.isArray(response)) {
+        usersArray = response
+      } else {
+        console.warn('⚠️ La respuesta no contiene un array de usuarios:', response)
+        usersArray = []
+      }
+      
+      console.log('✅ Usuarios obtenidos:', usersArray.length)
       
       return {
         success: true,
-        data: users
+        data: usersArray
       }
     } catch (error) {
       console.error('Error al obtener usuarios:', error)
@@ -29,18 +42,26 @@ class UserModel {
     }
   }
 
-  // GET - Obtener usuario por ID (requiere token + rol admin/seller)
+  // GET - Obtener usuario por ID
   static async getUserById(id) {
     try {
       console.log(`🔍 Obteniendo usuario con ID: ${id}`)
       
-      // GET a http://localhost:3000/api/users/:id
       const endpoint = API_CONFIG.ENDPOINTS.USER_BY_ID.replace(':id', id)
-      const user = await httpService.get(endpoint, true)
+      const response = await httpService.get(endpoint, true)
+      
+      let userData = null
+      if (response && response.data) {
+        userData = response.data
+      } else if (response && response.id) {
+        userData = response
+      } else {
+        userData = response
+      }
       
       return {
         success: true,
-        data: user
+        data: userData
       }
     } catch (error) {
       console.error('Error al obtener usuario:', error)
@@ -51,13 +72,11 @@ class UserModel {
     }
   }
 
-  // POST - Crear nuevo usuario (registro - público)
+  // POST - Crear nuevo usuario
   static async createUser(userData) {
     try {
       console.log('➕ Creando nuevo usuario:', userData.email)
       
-      // POST a http://localhost:3000/api/users/create
-      // No requiere token (público)
       const newUser = {
         name: userData.name,
         lastname: userData.lastname || '',
@@ -69,14 +88,21 @@ class UserModel {
       }
       
       const response = await httpService.post(
-        API_CONFIG.ENDPOINTS.REGISTER,  // '/users/create'
+        API_CONFIG.ENDPOINTS.REGISTER,
         newUser,
-        false  // No requiere token
+        false
       )
+      
+      let createdUser = null
+      if (response && response.data) {
+        createdUser = response.data
+      } else {
+        createdUser = response
+      }
       
       return {
         success: true,
-        data: response,
+        data: createdUser,
         message: 'Usuario creado exitosamente'
       }
     } catch (error) {
@@ -88,15 +114,13 @@ class UserModel {
     }
   }
 
-  // PUT - Actualizar todos los datos del usuario (requiere token + rol admin/seller)
+  // PUT - Actualizar usuario
   static async updateUser(id, userData) {
     try {
       console.log(`✏️ Actualizando usuario ID: ${id}`)
       
-      // PUT a http://localhost:3000/api/users/:id
       const endpoint = API_CONFIG.ENDPOINTS.USER_BY_ID.replace(':id', id)
       
-      // La API espera los campos a actualizar
       const updateData = {}
       if (userData.name !== undefined) updateData.name = userData.name
       if (userData.lastname !== undefined) updateData.lastname = userData.lastname
@@ -108,9 +132,16 @@ class UserModel {
       
       const response = await httpService.put(endpoint, updateData, true)
       
+      let updatedUser = null
+      if (response && response.data) {
+        updatedUser = response.data
+      } else {
+        updatedUser = response
+      }
+      
       return {
         success: true,
-        data: response,
+        data: updatedUser,
         message: 'Usuario actualizado exitosamente'
       }
     } catch (error) {
@@ -122,18 +153,24 @@ class UserModel {
     }
   }
 
-  // PATCH - Actualizar campo específico (usamos PUT ya que la API no tiene PATCH específico)
+  // PATCH - Actualizar campo específico
   static async patchUser(id, partialData) {
     try {
       console.log(`📝 Actualizando campo(s) de usuario ID: ${id}`, partialData)
       
-      // La API no tiene endpoint PATCH específico, usamos PUT
       const endpoint = API_CONFIG.ENDPOINTS.USER_BY_ID.replace(':id', id)
       const response = await httpService.put(endpoint, partialData, true)
       
+      let patchedUser = null
+      if (response && response.data) {
+        patchedUser = response.data
+      } else {
+        patchedUser = response
+      }
+      
       return {
         success: true,
-        data: response,
+        data: patchedUser,
         message: 'Campo actualizado correctamente'
       }
     } catch (error) {
@@ -145,12 +182,11 @@ class UserModel {
     }
   }
 
-  // DELETE - Eliminar usuario (requiere token + rol admin)
+  // DELETE - Eliminar usuario
   static async deleteUser(id) {
     try {
       console.log(`🗑️ Eliminando usuario ID: ${id}`)
       
-      // DELETE a http://localhost:3000/api/users/delete/:id
       const endpoint = API_CONFIG.ENDPOINTS.USER_DELETE.replace(':id', id)
       const response = await httpService.delete(endpoint, true)
       
