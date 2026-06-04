@@ -90,14 +90,14 @@
       "id": 2
     },
     {
-      "email": "hola2@mundo.com",
-      "password": "$2a$10$PWsVo8IvNtXYu6lt3hizo.LQipycAMwbm34p9tiXLNZuP59mZVNza",
-      "id": 3
-    },
-    {
       "email": "profe@albeiro.com",
       "password": "$2a$10$HnXRFN/jWdkNNH/aDwj2RuOexP81RfiIUUfFTbD.IwPY2nVCcgtjC",
       "id": 4
+    },
+    {
+      "email": "pepito@perez.com",
+      "password": "$2a$10$fUZ9oh/.Dc.oSoiNpJuMpuUmMS3CTNhBK8UwQbDTBpuThx8KVv/VO",
+      "id": 5
     }
   ]
 }
