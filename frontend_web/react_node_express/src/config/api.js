@@ -1,14 +1,14 @@
 // src/config/api.js
 const API_CONFIG = {
-  // Usa la IP real de tu máquina (la que muestra ipconfig/ifconfig)
-  // Si es la misma máquina, usa 'http://localhost:3000/api'
-  BASE_URL: 'http://10.1.196.46:3000/api',  // ← Verifica que esta IP sea correcta
+  BASE_URL: 'http://10.1.196.46:3000/api',
   TIMEOUT: 10000,
   ENDPOINTS: {
     LOGIN: '/users/login',
     REGISTER: '/users/create',
     USERS: '/users',
     USER_BY_ID: '/users/:id',
+    USER_UPDATE: '/users/:id',        // ← CAMBIADO: tu backend usa PUT /:id
+    USER_PATCH: '/users/:id',          // ← CAMBIADO: usaremos el mismo para PATCH
     USER_DELETE: '/users/delete/:id'
   }
 }

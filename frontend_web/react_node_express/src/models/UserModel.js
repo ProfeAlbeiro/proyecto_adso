@@ -8,14 +8,10 @@ class UserModel {
     try {
       console.log('📋 Obteniendo todos los usuarios desde API real')
       
-      // GET a http://192.168.230.1:3000/api/users
       const response = await httpService.get(API_CONFIG.ENDPOINTS.USERS, true)
       
       console.log('📦 Respuesta completa de getAllUsers:', response)
       
-      // IMPORTANTE: La API devuelve { success: true, data: [...] }
-      // httpService.handleResponse ya extrajo la respuesta completa
-      // Ahora necesitamos extraer el array de data
       let usersArray = []
       
       if (response && response.data && Array.isArray(response.data)) {
@@ -114,23 +110,31 @@ class UserModel {
     }
   }
 
-  // PUT - Actualizar usuario
+  // PUT - Actualizar usuario (tu backend usa PUT /:id)
   static async updateUser(id, userData) {
     try {
       console.log(`✏️ Actualizando usuario ID: ${id}`)
+      console.log('📝 Datos a enviar:', userData)
       
-      const endpoint = API_CONFIG.ENDPOINTS.USER_BY_ID.replace(':id', id)
+      // Usar el endpoint correcto: /users/:id (sin "update/")
+      const endpoint = API_CONFIG.ENDPOINTS.USER_UPDATE.replace(':id', id)
       
+      // Limpiar datos undefined y solo enviar los que tienen valor
       const updateData = {}
-      if (userData.name !== undefined) updateData.name = userData.name
+      if (userData.name !== undefined && userData.name !== '') updateData.name = userData.name
       if (userData.lastname !== undefined) updateData.lastname = userData.lastname
-      if (userData.email !== undefined) updateData.email = userData.email
+      if (userData.email !== undefined && userData.email !== '') updateData.email = userData.email
       if (userData.password && userData.password !== '') updateData.password = userData.password
       if (userData.phone !== undefined) updateData.phone = userData.phone
       if (userData.image !== undefined) updateData.image = userData.image
       if (userData.role !== undefined) updateData.role = userData.role
       
+      console.log('📦 Enviando PUT a:', endpoint)
+      console.log('📦 Con datos:', updateData)
+      
       const response = await httpService.put(endpoint, updateData, true)
+      
+      console.log('✅ Respuesta del servidor:', response)
       
       let updatedUser = null
       if (response && response.data) {
@@ -145,7 +149,7 @@ class UserModel {
         message: 'Usuario actualizado exitosamente'
       }
     } catch (error) {
-      console.error('Error al actualizar usuario:', error)
+      console.error('❌ Error en updateUser:', error)
       return {
         success: false,
         error: error.message || 'Error al actualizar usuario'
@@ -153,13 +157,20 @@ class UserModel {
     }
   }
 
-  // PATCH - Actualizar campo específico
+  // PATCH - Actualizar campo específico (usando el mismo endpoint PUT)
   static async patchUser(id, partialData) {
     try {
       console.log(`📝 Actualizando campo(s) de usuario ID: ${id}`, partialData)
       
-      const endpoint = API_CONFIG.ENDPOINTS.USER_BY_ID.replace(':id', id)
+      // Tu backend no tiene PATCH, usamos PUT con los datos parciales
+      const endpoint = API_CONFIG.ENDPOINTS.USER_PATCH.replace(':id', id)
+      
+      console.log('📦 Enviando PUT (como PATCH) a:', endpoint)
+      console.log('📦 Con datos:', partialData)
+      
       const response = await httpService.put(endpoint, partialData, true)
+      
+      console.log('✅ Respuesta del servidor:', response)
       
       let patchedUser = null
       if (response && response.data) {
@@ -174,7 +185,7 @@ class UserModel {
         message: 'Campo actualizado correctamente'
       }
     } catch (error) {
-      console.error('Error al actualizar campo:', error)
+      console.error('❌ Error en patchUser:', error)
       return {
         success: false,
         error: error.message || 'Error al actualizar campo'

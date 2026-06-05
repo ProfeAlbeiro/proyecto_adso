@@ -122,6 +122,9 @@ User.update = async (user, result) => {
   const sql = `UPDATE users SET ${fields.join(", ")} WHERE id = ?`;
   values.push(user.id);
 
+  console.log('📝 SQL Update:', sql);
+  console.log('📝 Values:', values);
+
   db.query(sql, values, (err, res) => {
     if (err) {
       console.log('Error al actualizar usuario: ', err);

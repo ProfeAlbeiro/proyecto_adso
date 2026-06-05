@@ -1,3 +1,4 @@
+// backend/nodejs_express/controllers/userController.js
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -127,10 +128,19 @@ module.exports = {
     });
   },
 
+  // ACTUALIZADO: getUserUpdate con manejo correcto del ID
   getUserUpdate(req, res) {
     const user = req.body;
+    const id = req.params.id;  // Obtener ID de los parámetros de la URL
+    
+    // Agregar el ID al objeto user
+    user.id = id;
+    
+    console.log('📝 Actualizando usuario:', { id: user.id, ...user });
+    
     User.update(user, (err, data) => {
       if (err) {
+        console.error('❌ Error en update:', err);
         return res.status(501).json({
           success: false,
           message: "Error al actualizar el usuario",

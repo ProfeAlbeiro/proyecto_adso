@@ -28,7 +28,6 @@ class HttpService {
   async handleResponse(response) {
     console.log('📡 Response status:', response.status)
     
-    // Obtener el cuerpo de la respuesta
     let data = {}
     try {
       data = await response.json()
@@ -43,7 +42,6 @@ class HttpService {
       throw new Error(errorMessage)
     }
     
-    // Retornamos toda la respuesta para que el Modelo pueda acceder a data.session_token
     return data
   }
 
@@ -86,6 +84,7 @@ class HttpService {
     try {
       const url = `${this.baseURL}${endpoint}`
       console.log(`📡 PUT a: ${url}`)
+      console.log('📡 Datos enviados:', data)
       const response = await fetch(url, {
         method: 'PUT',
         headers: this.getHeaders(includeAuth),
@@ -94,6 +93,24 @@ class HttpService {
       return await this.handleResponse(response)
     } catch (error) {
       console.error(`PUT ${endpoint} error:`, error)
+      throw error
+    }
+  }
+
+  // NUEVO: Método PATCH
+  async patch(endpoint, data, includeAuth = true) {
+    try {
+      const url = `${this.baseURL}${endpoint}`
+      console.log(`📡 PATCH a: ${url}`)
+      console.log('📡 Datos enviados:', data)
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: this.getHeaders(includeAuth),
+        body: JSON.stringify(data)
+      })
+      return await this.handleResponse(response)
+    } catch (error) {
+      console.error(`PATCH ${endpoint} error:`, error)
       throw error
     }
   }
